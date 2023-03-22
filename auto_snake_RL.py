@@ -1,5 +1,5 @@
 # Name: Martin Jimenez
-# Date: 03/21/2023 (last updated)
+# Date: 03/22/2023 (last updated)
 
 from cmu_graphics import *
 import numpy as np
@@ -93,7 +93,7 @@ if game_label_size > 350:
 
 score = Label(0, 50, blockSize / 2, fill='white', size=blockSize)
 game_m = Label('Game:', 200, blockSize / 2, fill='white', size=blockSize)
-game = Label(0, game_label_size, blockSize / 2, fill='white', size=blockSize)
+game = Label(1, game_label_size, blockSize / 2, fill='white', size=blockSize)
 
 path = []
 
@@ -119,13 +119,9 @@ agent = Agent()
 
 # Stops the program when the snake loses, wins, or if the game is ended early
 def gameOver():
-    global reward
-
     if autoReset:
-        print("appleSeed =", apple.get_seed())
+        #print("appleSeed =", apple.get_seed())
         resetGame()
-
-        reward = -10
         return
 
     if not gameOverMessage.visible:
@@ -140,9 +136,7 @@ def gameOver():
         gameOverMessage.visible = True
         gameOverMessage.toFront()
 
-        print("appleSeed =", apple.get_seed())
-
-        reward = -10
+        #print("appleSeed =", apple.get_seed())
 
 
 def resetGame():
@@ -151,8 +145,8 @@ def resetGame():
     global apple
     global step
 
-    print('RESET')
-    print('Snake got', score.value)
+    #print('RESET')
+    #print('Snake got', score.value)
 
     appleSeed = []
 
@@ -319,7 +313,10 @@ def onStep():
         return
 
     step += 1
-    reward = 0
+    if step > 50 * (len(snek.snake_body) + 1):
+        reward = -5
+    else:
+        reward = 0
 
     # Stops path updating the grid and pathfinding if the player is in control
     if not isPlaying:
@@ -342,7 +339,7 @@ def onStep():
     snek.move()
 
     if snek.snake_head.hits(apple.apple.centerX, apple.apple.centerY):
-        reward = 10
+        reward = 20             # reward for eating apple
 
         # Adds another body segment
         snek.add_body()
@@ -362,23 +359,22 @@ def onStep():
 
         score.value += 1
 
-    if not isPlaying:
-        new_state = agent.get_state(grid, snek, apple, border, blockSize)
-
-        agent.train_sm(old_state, action, reward, new_state, snek.is_dead())
-
-        # remember
-        agent.remember(old_state, action, reward, new_state, snek.is_dead())
-
     if snek.is_dead() or step > 100 * (len(snek.snake_body) + 1):
+        reward = -10
+
         if score.value > best_score:
             best_score = score.value
             agent.model.save()
 
         curr_score = score.value
 
-        # resets on autoReset
-        gameOver()
+        # trains short memory
+        new_state = agent.get_state(grid, snek, apple, border, blockSize)
+
+        agent.train_sm(old_state, action, reward, new_state, snek.is_dead())
+
+        # remember
+        agent.remember(old_state, action, reward, new_state, snek.is_dead())
 
         # train the long memory
         agent.n_games += 1
@@ -393,7 +389,15 @@ def onStep():
         plot_avg_scores.append(avg_score)
         plot(plot_scores, plot_avg_scores)
 
-        return
+        # resets on autoReset
+        gameOver()
+    else:
+        new_state = agent.get_state(grid, snek, apple, border, blockSize)
+
+        agent.train_sm(old_state, action, reward, new_state, snek.is_dead())
+
+        # remember
+        agent.remember(old_state, action, reward, new_state, snek.is_dead())
 
 
 if __name__ == '__main__':

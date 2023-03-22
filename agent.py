@@ -15,7 +15,7 @@ class Agent:
         self.epsilon = 0  # controls randomness
         self.gamma = 0.9  # discount rate (smaller than 1)
         self.memory = deque(maxlen=MAX)
-        self.model = Linear_QNet(11, 256, 3)  # (number of inputs, hidden size, number of outputs)
+        self.model = Linear_QNet(15, 256, 3)  # (number of inputs, hidden size, number of outputs)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, grid, snek, apple, border, blockSize):
@@ -39,6 +39,11 @@ class Agent:
         food_r = False
         food_u = False
         food_d = False
+
+        tail_l = False
+        tail_r = False
+        tail_u = False
+        tail_d = False
 
         if not border.hits(snek.snake_head.centerX, snek.snake_head.centerY):
             if direction == 0:
@@ -87,7 +92,16 @@ class Agent:
         if apple.apple.centerY > snek.snake_head.centerY:
             food_d = True
 
-        state = [danger_s, danger_r, danger_l, dir_l, dir_r, dir_u, dir_d, food_l, food_r, food_u, food_d]
+        if snek.snake_body[0].centerX < snek.snake_head.centerX:
+            tail_l = True
+        if snek.snake_body[0].centerX > snek.snake_head.centerX:
+            tail_r = True
+        if snek.snake_body[0].centerY < snek.snake_head.centerY:
+            tail_u = True
+        if snek.snake_body[0].centerY > snek.snake_head.centerY:
+            tail_d = True
+
+        state = [danger_s, danger_r, danger_l, dir_l, dir_r, dir_u, dir_d, food_l, food_r, food_u, food_d, tail_l, tail_r, tail_u, tail_d]
 
         return np.array(state, dtype=int)
 

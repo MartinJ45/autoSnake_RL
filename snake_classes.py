@@ -62,7 +62,7 @@ class Snake:
             self.snake_body.insert(0, Rect(self.snake_body[0].left, self.snake_body[0].top, self.size, self.size, fill='green', border='black', borderWidth=1))
 
     def is_dead(self):
-        if int(self.left/self.size) in (0, self.grid_size+1) or int(self.top/self.size) in (0, self.grid_size+1):
+        if pythonRound(self.left/self.size, 0) in (0, self.grid_size+1) or pythonRound(self.top/self.size, 0) in (0, self.grid_size+1):
             return True
 
         if len(self.snake_body) <= 1:
