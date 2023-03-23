@@ -1,5 +1,5 @@
 # Name: Martin Jimenez
-# Date: 03/22/2023 (last updated)
+# Date: 03/23/2023 (last updated)
 
 from cmu_graphics import *
 import numpy as np
@@ -93,7 +93,6 @@ if game_label_size > 350:
 
 score = Label(0, 50, blockSize / 2, fill='white', size=blockSize)
 game_m = Label('Game:', 200, blockSize / 2, fill='white', size=blockSize)
-game = Label(1, game_label_size, blockSize / 2, fill='white', size=blockSize)
 
 path = []
 
@@ -115,6 +114,11 @@ total_score = 0
 best_score = 0
 
 agent = Agent()
+n_games = agent.model.load()
+agent.n_games = int(n_games)
+initial_games = int(n_games)
+
+game = Label(agent.n_games, game_label_size, blockSize / 2, fill='white', size=blockSize)
 
 
 # Stops the program when the snake loses, wins, or if the game is ended early
@@ -189,6 +193,10 @@ def onKeyPress(key):
     global isPlaying
     global reset
     global autoReset
+
+    if key == 'S':
+        agent.model.save(agent.n_games)
+        print('Saving the model')
 
     if key == 'R':
         reset = True
@@ -360,11 +368,10 @@ def onStep():
         score.value += 1
 
     if snek.is_dead() or step > 100 * (len(snek.snake_body) + 1):
-        reward = -10
+        reward = -15
 
         if score.value > best_score:
             best_score = score.value
-            agent.model.save()
 
         curr_score = score.value
 
@@ -385,7 +392,7 @@ def onStep():
 
         plot_scores.append(curr_score)
         total_score += curr_score
-        avg_score = total_score / agent.n_games
+        avg_score = total_score / (agent.n_games - initial_games)
         plot_avg_scores.append(avg_score)
         plot(plot_scores, plot_avg_scores)
 

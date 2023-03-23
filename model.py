@@ -16,13 +16,40 @@ class Linear_QNet(nn.Module):
         x = self.linear2(x)
         return x
 
-    def save(self, file_name='model.pth'):
+    def save(self, n_games, file_name_model='model.pth', file_name_games='n_games.txt'):
         model_folder_path = './model'
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
-            file_name = os.path.join(model_folder_path, file_name)
-            torch.save(self.state_dict(), file_name)
+        file_name = os.path.join(model_folder_path, file_name_games)
+
+        with open(file_name, 'w') as fileout:
+            fileout.write(str(n_games))
+            fileout.close()
+
+        file_name = os.path.join(model_folder_path, file_name_model)
+        torch.save(self.state_dict(), file_name)
+
+    def load(self, file_name_model='model.pth', file_name_games='n_games.txt'):
+        n_games = 1
+
+        model_folder_path = '/model'
+        file_name = os.path.join(model_folder_path, file_name_games)
+
+        if os.path.isfile(file_name):
+            with open(file_name, 'r') as filein:
+                n_games = filein.readline()
+                filein.close()
+
+            file_name = os.path.join(model_folder_path, file_name_model)
+
+            self.load_state_dict(torch.load(file_name))
+            self.eval()
+            print('Loading existing state dict.')
+            return n_games
+
+        print('No existing state dict found. Starting from scratch.')
+        return n_games
 
 
 class QTrainer:
