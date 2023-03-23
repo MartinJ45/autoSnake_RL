@@ -33,7 +33,7 @@ class Linear_QNet(nn.Module):
     def load(self, file_name_model='model.pth', file_name_games='n_games.txt'):
         n_games = 1
 
-        model_folder_path = '/model'
+        model_folder_path = './model'
         file_name = os.path.join(model_folder_path, file_name_games)
 
         if os.path.isfile(file_name):
