@@ -15,20 +15,21 @@ class Agent:
         self.epsilon = 0  # controls randomness
         self.gamma = 0.9  # discount rate (smaller than 1)
         self.memory = deque(maxlen=MAX)
-        self.model = Linear_QNet(15, 256, 3)  # (number of inputs, hidden size, number of outputs)
+        self.model = Linear_QNet(18, 256, 3)  # (number of inputs, hidden size, number of outputs)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, grid, snek, apple, border, blockSize):
         head_pos = (int(snek.snake_head.left / blockSize), int(snek.snake_head.top / blockSize))
         direction = snek.snake_head.rotateAngle
-        adj_r = (1, 0)
-        adj_l = (-1, 0)
-        adj_u = (0, -1)
-        adj_d = (0, 1)
 
-        danger_s = False
-        danger_r = False
-        danger_l = False
+        adj_r = [(1, 0), (2, 0)]
+        adj_l = [(-1, 0), (-2, 0)]
+        adj_u = [(0, -1), (0, -2)]
+        adj_d = [(0, 1), (0, 2)]
+
+        danger_s = [False, False]
+        danger_r = [False, False]
+        danger_l = [False, False]
 
         dir_l = False
         dir_r = False
@@ -49,39 +50,55 @@ class Agent:
             if direction == 0:
                 dir_u = True
 
-                if grid[head_pos[1] + adj_u[1]][head_pos[0] + adj_u[0]] == 1:
-                    danger_s = True
-                if grid[head_pos[1] + adj_r[1]][head_pos[0] + adj_r[0]] == 1:
-                    danger_r = True
-                if grid[head_pos[1] + adj_l[1]][head_pos[0] + adj_l[0]] == 1:
-                    danger_l = True
+                for pos in range(2):
+                    try:
+                        if grid[head_pos[1] + adj_u[pos][1]][head_pos[0] + adj_u[pos][0]] == 1:
+                            danger_s[pos] = True
+                        if grid[head_pos[1] + adj_r[pos][1]][head_pos[0] + adj_r[pos][0]] == 1:
+                            danger_r[pos] = True
+                        if grid[head_pos[1] + adj_l[pos][1]][head_pos[0] + adj_l[pos][0]] == 1:
+                            danger_l[pos] = True
+                    except:
+                        pass
             if direction == 90:
                 dir_r = True
 
-                if grid[head_pos[1] + adj_r[1]][head_pos[0] + adj_r[0]] == 1:
-                    danger_s = True
-                if grid[head_pos[1] + adj_d[1]][head_pos[0] + adj_d[0]] == 1:
-                    danger_r = True
-                if grid[head_pos[1] + adj_u[1]][head_pos[0] + adj_u[0]] == 1:
-                    danger_l = True
+                for pos in range(2):
+                    try:
+                        if grid[head_pos[1] + adj_r[pos][1]][head_pos[0] + adj_r[pos][0]] == 1:
+                            danger_s[pos] = True
+                        if grid[head_pos[1] + adj_d[pos][1]][head_pos[0] + adj_d[pos][0]] == 1:
+                            danger_r[pos] = True
+                        if grid[head_pos[1] + adj_u[pos][1]][head_pos[0] + adj_u[pos][0]] == 1:
+                            danger_l[pos] = True
+                    except:
+                        pass
             if direction == 180:
                 dir_d = True
 
-                if grid[head_pos[1] + adj_d[1]][head_pos[0] + adj_d[0]] == 1:
-                    danger_s = True
-                if grid[head_pos[1] + adj_l[1]][head_pos[0] + adj_l[0]] == 1:
-                    danger_r = True
-                if grid[head_pos[1] + adj_r[1]][head_pos[0] + adj_r[0]] == 1:
-                    danger_l = True
+                for pos in range(2):
+                    try:
+                        if grid[head_pos[1] + adj_d[pos][1]][head_pos[0] + adj_d[pos][0]] == 1:
+                            danger_s[pos] = True
+                        if grid[head_pos[1] + adj_l[pos][1]][head_pos[0] + adj_l[pos][0]] == 1:
+                            danger_r[pos] = True
+                        if grid[head_pos[1] + adj_r[pos][1]][head_pos[0] + adj_r[pos][0]] == 1:
+                            danger_l[pos] = True
+                    except:
+                        pass
             if direction == 270:
                 dir_l = True
 
-                if grid[head_pos[1] + adj_l[1]][head_pos[0] + adj_l[0]] == 1:
-                    danger_s = True
-                if grid[head_pos[1] + adj_u[1]][head_pos[0] + adj_u[0]] == 1:
-                    danger_r = True
-                if grid[head_pos[1] + adj_d[1]][head_pos[0] + adj_d[0]] == 1:
-                    danger_l = True
+                for pos in range(2):
+                    try:
+                        if grid[head_pos[1] + adj_l[pos][1]][head_pos[0] + adj_l[pos][0]] == 1:
+                            danger_s[pos] = True
+                        if grid[head_pos[1] + adj_u[pos][1]][head_pos[0] + adj_u[pos][0]] == 1:
+                            danger_r[pos] = True
+                        if grid[head_pos[1] + adj_d[pos][1]][head_pos[0] + adj_d[pos][0]] == 1:
+                            danger_l[pos] = True
+                    except:
+                        pass
 
         if apple.apple.centerX < snek.snake_head.centerX:
             food_l = True
@@ -102,7 +119,8 @@ class Agent:
             if snek.snake_body[0].centerY > snek.snake_head.centerY:
                 tail_d = True
 
-        state = [danger_s, danger_r, danger_l, dir_l, dir_r, dir_u, dir_d, food_l, food_r, food_u, food_d, tail_l, tail_r, tail_u, tail_d]
+        state = [danger_s[0], danger_s[1], danger_r[0], danger_r[1], danger_l[0], danger_l[1], dir_l, dir_r, dir_u,
+                 dir_d, food_l, food_r, food_u, food_d, tail_l, tail_r, tail_u, tail_d]
 
         return np.array(state, dtype=int)
 
@@ -123,7 +141,7 @@ class Agent:
 
     def get_action(self, state):
         # random moves: tradeoff exploration / exploitation
-        self.epsilon = 80 - self.n_games
+        self.epsilon = 100 - self.n_games
 
         action = [0, 0, 0]
 

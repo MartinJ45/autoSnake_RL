@@ -99,6 +99,9 @@ path = []
 appleSeed = []
 snek = Snake(200-blockSize, 200, blockSize, size)
 apple = Apple(snek.left+blockSize, 200, blockSize, size)
+apple.gen_apple(snek.snake_head, snek.snake_body)
+
+action = [1, 0, 0]
 
 reward = 0
 
@@ -159,6 +162,7 @@ def resetGame():
 
     snek = Snake(200-blockSize, 200, blockSize, size)
     apple = Apple(snek.left+blockSize, 200, blockSize, size)
+    apple.gen_apple(snek.snake_head, snek.snake_body)
 
     score.value = 0
     step = 0
@@ -177,13 +181,13 @@ def genGrid():
     grid.append([1] * (size + 2))
 
     for body in snek.snake_body:
-        grid[int(body.top / blockSize)][int(body.left / blockSize)] = 1
+        grid[int(pythonRound(body.top / blockSize, 0))][int(pythonRound(body.left / blockSize, 0))] = 1
 
-    grid[int(snek.snake_head.top / blockSize)
-         ][int(snek.snake_head.left / blockSize)] = 3
+    grid[int(pythonRound(snek.snake_head.top / blockSize, 0))
+         ][int(pythonRound(snek.snake_head.left / blockSize, 0))] = 3
 
-    grid[int(apple.apple.top / blockSize)
-         ][int(apple.apple.left / blockSize)] = 9
+    grid[int(pythonRound(apple.apple.top / blockSize, 0))
+         ][int(pythonRound(apple.apple.left / blockSize, 0))] = 9
 
     return grid
 
@@ -193,6 +197,7 @@ def onKeyPress(key):
     global isPlaying
     global reset
     global autoReset
+    global action
 
     if key == 'S':
         agent.model.save(agent.n_games)
@@ -226,32 +231,44 @@ def onKeyPress(key):
     if isPlaying:
         if key == 'w':
             if snek.snake_head.rotateAngle == 0:
-                snek.set_direction('forward')
+                #snek.set_direction('forward')
+                action = [1, 0, 0]
             if snek.snake_head.rotateAngle == 90:
-                snek.set_direction('turn_left')
+                action = [0, 0, 1]
+                #snek.set_direction('turn_left')
             if snek.snake_head.rotateAngle == 270:
-                snek.set_direction('turn_right')
+                action = [0, 1, 0]
+                #snek.set_direction('turn_right')
         if key == 's':
             if snek.snake_head.rotateAngle == 180:
-                snek.set_direction('forward')
+                #snek.set_direction('forward')
+                action = [1, 0, 0]
             if snek.snake_head.rotateAngle == 90:
-                snek.set_direction('turn_right')
+                #snek.set_direction('turn_right')
+                action = [0, 1, 0]
             if snek.snake_head.rotateAngle == 270:
-                snek.set_direction('turn_left')
+                #snek.set_direction('turn_left')
+                action = [0, 0, 1]
         if key == 'a':
             if snek.snake_head.rotateAngle == 0:
-                snek.set_direction('turn_left')
+                #snek.set_direction('turn_left')
+                action = [0, 0, 1]
             if snek.snake_head.rotateAngle == 180:
-                snek.set_direction('turn_right')
+                #snek.set_direction('turn_right')
+                action = [0, 1, 0]
             if snek.snake_head.rotateAngle == 270:
-                snek.set_direction('forward')
+                #snek.set_direction('forward')
+                action = [1, 0, 0]
         if key == 'd':
             if snek.snake_head.rotateAngle == 0:
-                snek.set_direction('turn_right')
+                #snek.set_direction('turn_right')
+                action = [0, 1, 0]
             if snek.snake_head.rotateAngle == 90:
-                snek.set_direction('forward')
+                #snek.set_direction('forward')
+                action = [1, 0, 0]
             if snek.snake_head.rotateAngle == 180:
-                snek.set_direction('turn_left')
+                #snek.set_direction('turn_left')
+                action = [0, 0, 1]
 
     # Slows down the game
     if key == 'left':
@@ -286,9 +303,14 @@ def onKeyPress(key):
     if key == 'I':
         # Prints the current grid
         print('Current grid')
+        grid = genGrid()
         for g in grid:
             print(g)
         print('\n')
+
+        print('Current state')
+        print(agent.get_state(grid, snek, apple, border, blockSize))
+
         # Prints out the apple seed
         print('appleSeed =', apple.get_seed())
 
@@ -311,6 +333,7 @@ def onStep():
     global total_score
     global plot_scores
     global plot_avg_scores
+    global action
 
     if reset:
         resetGame()
@@ -326,28 +349,39 @@ def onStep():
     else:
         reward = 0
 
-    # Stops path updating the grid and pathfinding if the player is in control
+    grid = genGrid()
+
+    old_state = agent.get_state(grid, snek, apple, border, blockSize)
+
+    # get move
     if not isPlaying:
-        grid = genGrid()
-
-        old_state = agent.get_state(grid, snek, apple, border, blockSize)
-
-        # get move
         action = agent.get_action(old_state)
-        #action = [1, 0, 0]
 
-        if np.array_equal(action, [1, 0, 0]):
-            snek.set_direction('forward')
-        if np.array_equal(action, [0, 1, 0]):
-            snek.set_direction('turn_right')
-        if np.array_equal(action, [0, 0, 1]):
-            snek.set_direction('turn_left')
+    if np.array_equal(action, [1, 0, 0]):
+        snek.set_direction('forward')
+    if np.array_equal(action, [0, 1, 0]):
+        snek.set_direction('turn_right')
+    if np.array_equal(action, [0, 0, 1]):
+        snek.set_direction('turn_left')
 
     # Moves the snake
     snek.move()
 
+    if isPlaying:
+        action = [1, 0, 0]
+
     if snek.snake_head.hits(apple.apple.centerX, apple.apple.centerY):
         reward = 20             # reward for eating apple
+
+        if score.value % 10 == 0:
+            reward = 25
+
+        if score.value - 1 == best_score:
+            reward = 30
+        if score.value - 5 == best_score:
+            reward = 40
+        if score.value - 10 == best_score:
+            reward = 60
 
         # Adds another body segment
         snek.add_body()
@@ -368,7 +402,7 @@ def onStep():
         score.value += 1
 
     if snek.is_dead() or step > 100 * (len(snek.snake_body) + 1):
-        reward = -15
+        reward = -15 + 0.2 * len(snek.snake_body)
 
         if score.value > best_score:
             best_score = score.value
