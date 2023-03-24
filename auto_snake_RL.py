@@ -99,7 +99,7 @@ path = []
 appleSeed = []
 snek = Snake(200-blockSize, 200, blockSize, size)
 apple = Apple(snek.left+blockSize, 200, blockSize, size)
-apple.gen_apple(snek.snake_head, snek.snake_body)
+#apple.gen_apple(snek.snake_head, snek.snake_body)
 
 action = [1, 0, 0]
 
@@ -162,7 +162,7 @@ def resetGame():
 
     snek = Snake(200-blockSize, 200, blockSize, size)
     apple = Apple(snek.left+blockSize, 200, blockSize, size)
-    apple.gen_apple(snek.snake_head, snek.snake_body)
+    #apple.gen_apple(snek.snake_head, snek.snake_body)
 
     score.value = 0
     step = 0
