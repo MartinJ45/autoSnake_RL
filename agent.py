@@ -9,118 +9,105 @@ batch_size = 1000
 LR = 0.001
 
 
+def find_dist(grid, head_pos, change_y, change_x):
+    dist = -1
+    has_apple = False
+    space = 0
+
+    while space != 1:
+        dist += 1
+        space = grid[head_pos[1] + (change_y * (dist+1))][head_pos[0] + (change_x * (dist+1))]
+        if space == 9:
+            has_apple = True
+
+    return dist, has_apple
+
 class Agent:
     def __init__(self, n_games=0):
         self.n_games = n_games
         self.epsilon = 0  # controls randomness
         self.gamma = 0.9  # discount rate (smaller than 1)
         self.memory = deque(maxlen=MAX)
-        self.model = Linear_QNet(18, 256, 3)  # (number of inputs, hidden size, number of outputs)
+        self.model = Linear_QNet(16, 256, 3)  # (number of inputs, hidden size, number of outputs)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, grid, snek, apple, border, blockSize):
         head_pos = (int(snek.snake_head.left / blockSize), int(snek.snake_head.top / blockSize))
-        direction = snek.snake_head.rotateAngle
+        apple_pos = (int(apple.apple.left / blockSize), int(apple.apple.top / blockSize))
+        direction_head = snek.snake_head.rotateAngle
 
-        adj_r = [(1, 0), (2, 0)]
-        adj_l = [(-1, 0), (-2, 0)]
-        adj_u = [(0, -1), (0, -2)]
-        adj_d = [(0, 1), (0, 2)]
+        try:
+            direction_tail = snek.snake_body[0].rotateAngle
+        except:
+            direction_tail = direction_head
 
-        danger_s = [False, False]
-        danger_r = [False, False]
-        danger_l = [False, False]
+        dist_s = 0
+        dist_r = 0
+        dist_l = 0
+
+        dist_food_x = 0
+        dist_food_y = 0
+
+        food_s = False
+        food_r = False
+        food_l = False
 
         dir_l = False
         dir_r = False
         dir_u = False
         dir_d = False
 
-        food_l = False
-        food_r = False
-        food_u = False
-        food_d = False
-
-        tail_l = False
-        tail_r = False
-        tail_u = False
-        tail_d = False
+        tail_dir_l = False
+        tail_dir_r = False
+        tail_dir_u = False
+        tail_dir_d = False
 
         if not border.hits(snek.snake_head.centerX, snek.snake_head.centerY):
-            if direction == 0:
+            dist_food_x = abs(head_pos[0] - apple_pos[0])
+            dist_food_y = abs(head_pos[1] - apple_pos[1])
+
+            if direction_head == 0:
                 dir_u = True
 
-                for pos in range(2):
-                    try:
-                        if grid[head_pos[1] + adj_u[pos][1]][head_pos[0] + adj_u[pos][0]] == 1:
-                            danger_s[pos] = True
-                        if grid[head_pos[1] + adj_r[pos][1]][head_pos[0] + adj_r[pos][0]] == 1:
-                            danger_r[pos] = True
-                        if grid[head_pos[1] + adj_l[pos][1]][head_pos[0] + adj_l[pos][0]] == 1:
-                            danger_l[pos] = True
-                    except:
-                        pass
-            if direction == 90:
+                dist_s, food_s = find_dist(grid, head_pos, -1, 0)
+                dist_r, food_r = find_dist(grid, head_pos, 0, 1)
+                dist_l, food_l = find_dist(grid, head_pos, 0, -1)
+
+            if direction_head == 90:
                 dir_r = True
 
-                for pos in range(2):
-                    try:
-                        if grid[head_pos[1] + adj_r[pos][1]][head_pos[0] + adj_r[pos][0]] == 1:
-                            danger_s[pos] = True
-                        if grid[head_pos[1] + adj_d[pos][1]][head_pos[0] + adj_d[pos][0]] == 1:
-                            danger_r[pos] = True
-                        if grid[head_pos[1] + adj_u[pos][1]][head_pos[0] + adj_u[pos][0]] == 1:
-                            danger_l[pos] = True
-                    except:
-                        pass
-            if direction == 180:
+                dist_s, food_s = find_dist(grid, head_pos, 0, 1)
+                dist_r, food_r = find_dist(grid, head_pos, 1, 0)
+                dist_l, food_l = find_dist(grid, head_pos, -1, 0)
+
+            if direction_head == 180:
                 dir_d = True
 
-                for pos in range(2):
-                    try:
-                        if grid[head_pos[1] + adj_d[pos][1]][head_pos[0] + adj_d[pos][0]] == 1:
-                            danger_s[pos] = True
-                        if grid[head_pos[1] + adj_l[pos][1]][head_pos[0] + adj_l[pos][0]] == 1:
-                            danger_r[pos] = True
-                        if grid[head_pos[1] + adj_r[pos][1]][head_pos[0] + adj_r[pos][0]] == 1:
-                            danger_l[pos] = True
-                    except:
-                        pass
-            if direction == 270:
+                dist_s, food_s = find_dist(grid, head_pos, 1, 0)
+                dist_r, food_r = find_dist(grid, head_pos, 0, -1)
+                dist_l, food_l = find_dist(grid, head_pos, 0, 1)
+
+            if direction_head == 270:
                 dir_l = True
 
-                for pos in range(2):
-                    try:
-                        if grid[head_pos[1] + adj_l[pos][1]][head_pos[0] + adj_l[pos][0]] == 1:
-                            danger_s[pos] = True
-                        if grid[head_pos[1] + adj_u[pos][1]][head_pos[0] + adj_u[pos][0]] == 1:
-                            danger_r[pos] = True
-                        if grid[head_pos[1] + adj_d[pos][1]][head_pos[0] + adj_d[pos][0]] == 1:
-                            danger_l[pos] = True
-                    except:
-                        pass
+                dist_s, food_s = find_dist(grid, head_pos, 0, -1)
+                dist_r, food_r = find_dist(grid, head_pos, -1, 0)
+                dist_l, food_l = find_dist(grid, head_pos, 1, 0)
 
-        if apple.apple.centerX < snek.snake_head.centerX:
-            food_l = True
-        if apple.apple.centerX > snek.snake_head.centerX:
-            food_r = True
-        if apple.apple.centerY < snek.snake_head.centerY:
-            food_u = True
-        if apple.apple.centerY > snek.snake_head.centerY:
-            food_d = True
+            if direction_tail == 0:
+                tail_dir_u = True
 
-        if len(snek.snake_body) > 0:
-            if snek.snake_body[0].centerX < snek.snake_head.centerX:
-                tail_l = True
-            if snek.snake_body[0].centerX > snek.snake_head.centerX:
-                tail_r = True
-            if snek.snake_body[0].centerY < snek.snake_head.centerY:
-                tail_u = True
-            if snek.snake_body[0].centerY > snek.snake_head.centerY:
-                tail_d = True
+            if direction_tail == 90:
+                tail_dir_r = True
 
-        state = [danger_s[0], danger_s[1], danger_r[0], danger_r[1], danger_l[0], danger_l[1], dir_l, dir_r, dir_u,
-                 dir_d, food_l, food_r, food_u, food_d, tail_l, tail_r, tail_u, tail_d]
+            if direction_tail == 180:
+                tail_dir_d = True
+
+            if direction_tail == 270:
+                tail_dir_l = True
+
+        state = [dist_s, dist_r, dist_l, dist_food_x, dist_food_y, food_s, food_r, food_l,
+                 dir_l, dir_r, dir_u, dir_d, tail_dir_l, tail_dir_r, tail_dir_u, tail_dir_d]
 
         return np.array(state, dtype=int)
 

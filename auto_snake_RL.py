@@ -1,5 +1,5 @@
 # Name: Martin Jimenez
-# Date: 03/23/2023 (last updated)
+# Date: 03/27/2023 (last updated)
 
 from cmu_graphics import *
 import numpy as np
@@ -402,7 +402,7 @@ def onStep():
         score.value += 1
 
     if snek.is_dead() or step > 100 * (len(snek.snake_body) + 1):
-        reward = -15 + 0.2 * len(snek.snake_body)
+        reward = -20 + 0.2 * len(snek.snake_body)
 
         if score.value > best_score:
             best_score = score.value
