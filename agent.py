@@ -28,7 +28,7 @@ class Agent:
         self.epsilon = 0  # controls randomness
         self.gamma = 0.9  # discount rate (smaller than 1)
         self.memory = deque(maxlen=MAX)
-        self.model = Linear_QNet(16, 256, 3)  # (number of inputs, hidden size, number of outputs)
+        self.model = Linear_QNet(16, 32, 3)  # (number of inputs, hidden size, number of outputs)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, grid, snek, apple, border, blockSize):
@@ -40,6 +40,8 @@ class Agent:
             direction_tail = snek.snake_body[0].rotateAngle
         except:
             direction_tail = direction_head
+
+        length = len(snek.snake_body)
 
         dist_s = 0
         dist_r = 0

@@ -1,5 +1,5 @@
 # Name: Martin Jimenez
-# Date: 03/27/2023 (last updated)
+# Date: 03/30/2023 (last updated)
 
 from cmu_graphics import *
 import numpy as np
@@ -374,14 +374,10 @@ def onStep():
         reward = 20             # reward for eating apple
 
         if score.value % 10 == 0:
-            reward = 25
+            reward = 30
 
         if score.value - 1 == best_score:
-            reward = 30
-        if score.value - 5 == best_score:
             reward = 40
-        if score.value - 10 == best_score:
-            reward = 60
 
         # Adds another body segment
         snek.add_body()
@@ -402,7 +398,7 @@ def onStep():
         score.value += 1
 
     if snek.is_dead() or step > 100 * (len(snek.snake_body) + 1):
-        reward = -20 + 0.2 * len(snek.snake_body)
+        reward = -20
 
         if score.value > best_score:
             best_score = score.value
