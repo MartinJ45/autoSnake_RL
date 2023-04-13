@@ -10,11 +10,10 @@ class Linear_QNet(nn.Module):
         super().__init__()
         self.linear1 = nn.Linear(input_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size, output_size)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = self.linear2(x)
-        return x
+        return self.linear2(self.relu(self.linear1(x)))
 
     def save(self, n_games, file_name_model='model.pth', file_name_games='n_games.txt'):
         model_folder_path = './model'
