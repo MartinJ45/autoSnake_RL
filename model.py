@@ -75,7 +75,7 @@ class QTrainer:
             game_over = (game_over, )  # defines it as a tuple
 
         # 1: predicted Q values with current state
-        pred = self.model(state)
+        pred = self.model(state)                # decides where the snake should go
 
         target = pred.clone()
 
