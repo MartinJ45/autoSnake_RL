@@ -7,16 +7,17 @@ from model import Linear_QNet, QTrainer
 MAX = 100000
 batch_size = 1000
 LR = 0.001
+RANDOM = 500
 
 
 def find_dist(grid, head_pos, change_y, change_x):
-    dist = -1
+    dist = 0
     has_apple = False
     space = 0
 
     while space != 1:
-        dist += 1
         space = grid[head_pos[1] + (change_y * (dist+1))][head_pos[0] + (change_x * (dist+1))]
+        dist += 1
         if space == 9:
             has_apple = True
 
@@ -128,11 +129,11 @@ class Agent:
 
     def get_action(self, state):
         # random moves: tradeoff exploration / exploitation
-        self.epsilon = 500 - self.n_games
+        self.epsilon = RANDOM - self.n_games
 
         action = [0, 0, 0]
 
-        if random.randint(0, 1000) < self.epsilon:
+        if random.randint(0, RANDOM*2) < self.epsilon:
             move = random.randint(0, 2)
             action[move] = 1
         else:
