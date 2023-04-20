@@ -34,14 +34,17 @@ class Agent:
         self.model = Linear_QNet(16, 32, 3)  # (number of inputs, hidden size, number of outputs)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
-        model_folder_path = '/model'
+        model_folder_path = './model'
+        file_path = 'memory.pickle'
+        file_name = os.path.join(model_folder_path, file_path)
+
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
-        if os.path.isfile('model/memory.pickle.dat'):
-            self.memory = shelve.open('model/memory.pickle', writeback=True)
+        if os.path.isfile(file_name):
+            self.memory = shelve.open(file_name, writeback=True)
         else:
-            self.memory = shelve.open('model/memory.pickle', writeback=True)
+            self.memory = shelve.open(file_name, writeback=True)
             self.memory['mem'] = deque(maxlen=MAX)
 
     def get_state(self, grid, snek, apple, border, blockSize):
