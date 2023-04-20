@@ -9,6 +9,8 @@ from snake_classes import Apple
 from agent import Agent
 from helper import plot
 
+import shelve
+
 # The default game speed is 10; this value can be changed by pressing the
 # left and right arrow keys
 app.stepsPerSecond = 10
@@ -114,12 +116,12 @@ LR = 0.001
 plot_scores = []
 plot_avg_scores = []
 total_score = 0
-best_score = 0
 
 agent = Agent()
-n_games = agent.model.load()
+n_games, best_score = agent.model.load()
 agent.n_games = int(n_games)
 initial_games = int(n_games)
+best_score = int(best_score)
 
 game = Label(agent.n_games, game_label_size, blockSize / 2, fill='white', size=blockSize)
 
@@ -197,9 +199,14 @@ def onKeyPress(key):
     global reset
     global autoReset
     global action
+    global best_score
+    global step
 
     if key == 'S':
-        agent.model.save(agent.n_games)
+        agent.model.save(agent.n_games, best_score)
+        agent.forget(step)
+        agent.memory.close()
+        agent.memory = shelve.open('model/memory.pickle', writeback=True)
         print('Saving the model')
 
     if key == 'R':
@@ -345,11 +352,12 @@ def onStep():
     if isPaused:
         return
 
-    step += 1
-    if step > 50 * (len(snek.snake_body) + 1):
-        reward = -5
-    else:
-        reward = 0
+    # print(len(agent.memory['mem']))
+    #
+    # if step > 50 * (len(snek.snake_body) + 1):
+    #     reward = -5
+    # else:
+    #     reward = 0
 
     grid = genGrid()
 
@@ -357,7 +365,7 @@ def onStep():
 
     # get move
     if not isPlaying:
-        action = agent.get_action(old_state)
+        action = agent.get_action(old_state, best_score)
 
     if np.array_equal(action, [1, 0, 0]):
         snek.set_direction('forward')
@@ -373,17 +381,17 @@ def onStep():
         action = [1, 0, 0]
 
     if snek.snake_head.hits(apple.apple.centerX, apple.apple.centerY):
-        reward = 20             # reward for eating apple
+        reward = 5             # reward for eating apple
 
-        if score.value % 10 == 0:
-            reward = 25
-
-        if score.value - 1 == best_score:
-            reward = 30
-        if score.value - 5 == best_score:
-            reward = 40
-        if score.value - 10 == best_score:
-            reward = 60
+        # if score.value % 10 == 0:
+        #     reward = 25
+        #
+        # if score.value - 1 == best_score:
+        #     reward = 30
+        # if score.value - 5 == best_score:
+        #     reward = 40
+        # if score.value - 10 == best_score:
+        #     reward = 60
 
         # Adds another body segment
         snek.add_body()
@@ -404,10 +412,19 @@ def onStep():
         score.value += 1
 
     if snek.is_dead() or step > 100 * (len(snek.snake_body) + 1):
-        reward = -15 * (0.2 * len(snek.snake_body))
+        reward = -5
 
-        if score.value > best_score:
+        if agent.n_games % 100 == 0:
+            agent.model.save(agent.n_games, best_score)
+            agent.forget(step)
+            agent.memory.close()
+            agent.memory = shelve.open('model/memory.pickle', writeback=True)
+            print('Saving the model')
+
+        if score.value >= best_score:
             best_score = score.value
+        #else:
+            #agent.forget(step)
 
         curr_score = score.value
 
@@ -441,6 +458,8 @@ def onStep():
 
         # remember
         agent.remember(old_state, action, reward, new_state, snek.is_dead())
+
+    step += 1
 
 
 if __name__ == '__main__':
