@@ -1,5 +1,5 @@
 # Name: Martin Jimenez
-# Date: 04/17/2023 (last updated)
+# Date: 04/20/2023 (last updated)
 
 from cmu_graphics import *
 import numpy as np
@@ -20,6 +20,7 @@ isPaused = True
 isPlaying = False
 reset = False
 autoReset = True
+autoSave = True
 
 # Grabs size input
 # breaks on 4
@@ -343,6 +344,7 @@ def onStep():
     global plot_scores
     global plot_avg_scores
     global action
+    global autoSave
 
     if reset:
         resetGame()
@@ -353,11 +355,11 @@ def onStep():
         return
 
     # print(len(agent.memory['mem']))
-    #
-    # if step > 50 * (len(snek.snake_body) + 1):
-    #     reward = -5
-    # else:
-    #     reward = 0
+
+    if step > 50 * (len(snek.snake_body) + 1):
+        reward = -5
+    else:
+        reward = 0
 
     grid = genGrid()
 
@@ -381,17 +383,17 @@ def onStep():
         action = [1, 0, 0]
 
     if snek.snake_head.hits(apple.apple.centerX, apple.apple.centerY):
-        reward = 5             # reward for eating apple
+        reward = 20             # reward for eating apple
 
-        # if score.value % 10 == 0:
-        #     reward = 25
-        #
-        # if score.value - 1 == best_score:
-        #     reward = 30
-        # if score.value - 5 == best_score:
-        #     reward = 40
-        # if score.value - 10 == best_score:
-        #     reward = 60
+        if score.value % 10 == 0:
+            reward = 25
+
+        if score.value - 1 == best_score:
+            reward = 30
+        if score.value - 5 == best_score:
+            reward = 40
+        if score.value - 10 == best_score:
+            reward = 60
 
         # Adds another body segment
         snek.add_body()
@@ -412,16 +414,16 @@ def onStep():
         score.value += 1
 
     if snek.is_dead() or step > 100 * (len(snek.snake_body) + 1):
-        reward = -5
+        reward = -15 * (0.2 * len(snek.snake_body))
 
-        if agent.n_games % 100 == 0:
+        if autoSave and agent.n_games % 100 == 0:
             agent.model.save(agent.n_games, best_score)
             agent.forget(step)
             agent.memory.close()
             agent.memory = shelve.open('model/memory.pickle', writeback=True)
             print('Saving the model')
 
-        if score.value >= best_score:
+        if score.value > best_score:
             best_score = score.value
         #else:
             #agent.forget(step)
