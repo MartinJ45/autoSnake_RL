@@ -15,8 +15,8 @@ class Linear_QNet(nn.Module):
     def forward(self, x):
         return self.linear2(self.relu(self.linear1(x)))
 
-    def save(self, n_games, best_score, file_name_model='model.pth', file_name_games='n_games.txt'):
-        model_folder_path = '/model'
+    def save(self, n_games, best_score, file_name_model='model.pth', file_name_games='n_games'):
+        model_folder_path = './model'
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
@@ -30,11 +30,11 @@ class Linear_QNet(nn.Module):
         file_name = os.path.join(model_folder_path, file_name_model)
         torch.save(self.state_dict(), file_name)
 
-    def load(self, file_name_model='model.pth', file_name_games='n_games.txt'):
+    def load(self, file_name_model='model.pth', file_name_games='n_games'):
         n_games = 1
         best_score = 0
 
-        model_folder_path = '/model'
+        model_folder_path = './model'
         file_name = os.path.join(model_folder_path, file_name_games)
 
         if os.path.isfile(file_name):
@@ -100,7 +100,7 @@ class QTrainer:
 
         self.optimizer.step()
 
-        print('loss', loss)
-        print('pred', pred)
-        print('target', target)
-        print('state', next_state)
+        # print('loss', loss)
+        # print('pred', pred)
+        # print('target', target)
+        # print('state', next_state)
