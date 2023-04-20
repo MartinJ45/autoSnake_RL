@@ -3,6 +3,8 @@ import numpy as np
 import torch
 import random
 from model import Linear_QNet, QTrainer
+import shelve
+import os
 
 MAX = 100000
 batch_size = 1000
@@ -28,9 +30,19 @@ class Agent:
         self.n_games = n_games
         self.epsilon = 0  # controls randomness
         self.gamma = 0.9  # discount rate (smaller than 1)
-        self.memory = deque(maxlen=MAX)
+        #self.memory = deque(maxlen=MAX)
         self.model = Linear_QNet(16, 32, 3)  # (number of inputs, hidden size, number of outputs)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
+
+        model_folder_path = '/model'
+        if not os.path.exists(model_folder_path):
+            os.makedirs(model_folder_path)
+
+        if os.path.isfile('model/memory.pickle.dat'):
+            self.memory = shelve.open('model/memory.pickle', writeback=True)
+        else:
+            self.memory = shelve.open('model/memory.pickle', writeback=True)
+            self.memory['mem'] = deque(maxlen=MAX)
 
     def get_state(self, grid, snek, apple, border, blockSize):
         head_pos = (int(snek.snake_head.left / blockSize), int(snek.snake_head.top / blockSize))
@@ -113,13 +125,17 @@ class Agent:
         return np.array(state, dtype=int)
 
     def remember(self, state, action, reward, next_state, game_over):
-        self.memory.append((state, action, reward, next_state, game_over))
+        self.memory['mem'].append((state, action, reward, next_state, game_over))
+
+    def forget(self, steps):
+        for i in range(steps):
+            self.memory['mem'].pop()
 
     def train_lm(self):
-        if len(self.memory) > batch_size:
-            mini_sample = random.sample(self.memory, batch_size) # returns list of tuples
+        if len(self.memory['mem']) > batch_size:
+            mini_sample = random.sample(self.memory['mem'], batch_size) # returns list of tuples
         else:
-            mini_sample = self.memory
+            mini_sample = self.memory['mem']
 
         states, actions, rewards, next_states, game_over = zip(*mini_sample)
         self.trainer.train_step(states, actions, rewards, next_states, game_over)
@@ -127,7 +143,7 @@ class Agent:
     def train_sm(self, state, action, reward, next_state, game_over):
         self.trainer.train_step(state, action, reward, next_state, game_over)
 
-    def get_action(self, state):
+    def get_action(self, state, best_score):
         # random moves: tradeoff exploration / exploitation
         self.epsilon = RANDOM - self.n_games
 
