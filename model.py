@@ -15,15 +15,16 @@ class Linear_QNet(nn.Module):
     def forward(self, x):
         return self.linear2(self.relu(self.linear1(x)))
 
-    def save(self, n_games, file_name_model='model.pth', file_name_games='n_games.txt'):
-        model_folder_path = './model'
+    def save(self, n_games, best_score, file_name_model='model.pth', file_name_games='n_games.txt'):
+        model_folder_path = '/model'
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
         file_name = os.path.join(model_folder_path, file_name_games)
 
         with open(file_name, 'w') as fileout:
-            fileout.write(str(n_games))
+            fileout.write(f'{str(n_games)}\n')
+            fileout.write(str(best_score))
             fileout.close()
 
         file_name = os.path.join(model_folder_path, file_name_model)
@@ -31,13 +32,15 @@ class Linear_QNet(nn.Module):
 
     def load(self, file_name_model='model.pth', file_name_games='n_games.txt'):
         n_games = 1
+        best_score = 0
 
-        model_folder_path = './model'
+        model_folder_path = '/model'
         file_name = os.path.join(model_folder_path, file_name_games)
 
         if os.path.isfile(file_name):
             with open(file_name, 'r') as filein:
                 n_games = filein.readline()
+                best_score = filein.readline()
                 filein.close()
 
             file_name = os.path.join(model_folder_path, file_name_model)
@@ -45,10 +48,10 @@ class Linear_QNet(nn.Module):
             self.load_state_dict(torch.load(file_name))
             self.eval()
             print('Loading existing state dict.')
-            return n_games
+            return n_games, best_score
 
         print('No existing state dict found. Starting from scratch.')
-        return n_games
+        return n_games, best_score
 
 
 class QTrainer:
@@ -96,3 +99,8 @@ class QTrainer:
         loss.backward()
 
         self.optimizer.step()
+
+        print('loss', loss)
+        print('pred', pred)
+        print('target', target)
+        print('state', next_state)
