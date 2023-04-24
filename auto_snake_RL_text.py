@@ -1,11 +1,12 @@
 # Name: Martin Jimenez
-# Date: 04/23/2023 (last updated)
+# Date: 04/24/2023 (last updated)
 
 import numpy as np
 from agent_text import Agent
 import shelve
 from random import *
 import time
+from helper import plot
 
 # The default game speed is 10; this value can be changed by pressing the
 # left and right arrow keys
@@ -122,6 +123,9 @@ def move_snake(snek, add_body):
 
         new_pos = pos[0] + change[0], pos[1] + change[1]
 
+        if snek.get(new_pos):
+            return snek, False, True
+
         if i == 0:
             new_change = change
         else:
@@ -134,7 +138,7 @@ def move_snake(snek, add_body):
     if add_body:
         snek.update({last_pos: last_change})
 
-    return snek, False
+    return snek, False, False
 
 
 def gen_apple(snek):
@@ -151,6 +155,8 @@ def gen_apple(snek):
 
 
 def save():
+    global agent
+
     agent.model.save(agent.n_games, best_score)
     agent.forget(step)
     agent.memory.close()
@@ -364,8 +370,8 @@ def play_step():
 
     snek.update({list(snek)[0]: change})
 
-    snek, add_body = move_snake(snek, add_body)
-    grid = gen_grid(snek, apple)
+    snek, add_body, is_dead = move_snake(snek, add_body)
+    # grid = gen_grid(snek, apple)
 
     if isPlaying:
         action = [1, 0, 0]
@@ -397,11 +403,11 @@ def play_step():
         else:
             apple = gen_apple(snek)
 
-        appleSeed.append(apple)
+        # appleSeed.append(apple)
 
         score += 1
 
-    if list(snek)[0][0] in (0, 19) or list(snek)[0][1] in (0, 19) or step > 100 * len(snek):
+    if is_dead or list(snek)[0][0] in (0, 19) or list(snek)[0][1] in (0, 19) or step > 100 * len(snek):
         reward = -15 * 0.2 * len(snek)
 
         if autoSave and agent.n_games % 100 == 0:
@@ -433,7 +439,7 @@ def play_step():
         total_score += curr_score
         avg_score = total_score / (agent.n_games - initial_games)
         plot_avg_scores.append(avg_score)
-        # plot(plot_scores, plot_avg_scores)
+        plot(plot_scores, plot_avg_scores)
 
         # resets on autoReset
         gameOver()
@@ -449,9 +455,11 @@ def play_step():
 
 
 if __name__ == '__main__':
-    games = 10000
+    games = 50
 
     num_start = agent.n_games
+
+    print(len(agent.memory['mem']))
 
     timer_start = time.time()
     while agent.n_games - num_start < games:
@@ -465,3 +473,4 @@ if __name__ == '__main__':
     print(f'Took {total_time:.2f}s to train for {games} games')
     print(f'Averaged {total_time / games:.2f}s per game')
     save()
+    input()
