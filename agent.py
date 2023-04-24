@@ -30,7 +30,7 @@ class Agent:
         self.n_games = n_games
         self.epsilon = 0  # controls randomness
         self.gamma = 0.9  # discount rate (smaller than 1)
-        #self.memory = deque(maxlen=MAX)
+        # self.memory = deque(maxlen=MAX)
         self.model = Linear_QNet(16, 32, 3)  # (number of inputs, hidden size, number of outputs)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
@@ -41,11 +41,11 @@ class Agent:
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
-        if os.path.isfile(file_name):
-            self.memory = shelve.open(file_name, writeback=True)
-        else:
+            print('not found')
             self.memory = shelve.open(file_name, writeback=True)
             self.memory['mem'] = deque(maxlen=MAX)
+
+        self.memory = shelve.open(file_name, writeback=True)
 
     def get_state(self, grid, snek, apple, border, blockSize):
         head_pos = (int(snek.snake_head.left / blockSize), int(snek.snake_head.top / blockSize))
@@ -122,7 +122,7 @@ class Agent:
             if direction_tail == 270:
                 tail_dir_l = True
 
-        state = [dist_s, dist_r, dist_l, dist_food_x, dist_food_y, food_s, food_r, food_l,
+        state = [dist_s, dist_r, dist_l, dist_food_y, dist_food_x, food_s, food_r, food_l,
                  dir_l, dir_r, dir_u, dir_d, tail_dir_l, tail_dir_r, tail_dir_u, tail_dir_d]
 
         return np.array(state, dtype=int)
@@ -162,3 +162,5 @@ class Agent:
             action[move] = 1
 
         return action
+
+
