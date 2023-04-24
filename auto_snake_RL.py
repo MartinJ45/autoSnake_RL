@@ -1,5 +1,5 @@
 # Name: Martin Jimenez
-# Date: 04/20/2023 (last updated)
+# Date: 04/24/2023 (last updated)
 
 from cmu_graphics import *
 import numpy as np
@@ -102,7 +102,6 @@ path = []
 appleSeed = []
 snek = Snake(200-blockSize, 200, blockSize, size)
 apple = Apple(snek.left+blockSize, 200, blockSize, size)
-#apple.gen_apple(snek.snake_head, snek.snake_body)
 
 action = [1, 0, 0]
 
@@ -354,7 +353,7 @@ def onStep():
     if isPaused:
         return
 
-    # print(len(agent.memory['mem']))
+    # print(agent.memory['mem'])
 
     if step > 50 * (len(snek.snake_body) + 1):
         reward = -5
@@ -456,6 +455,7 @@ def onStep():
     else:
         new_state = agent.get_state(grid, snek, apple, border, blockSize)
 
+        # short memory
         agent.train_sm(old_state, action, reward, new_state, snek.is_dead())
 
         # remember
