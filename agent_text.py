@@ -18,7 +18,7 @@ def find_dist(grid, head_pos, change_y, change_x):
     space = 0
 
     while space != 1:
-        space = grid[head_pos[1] + (change_y * (dist+1))][head_pos[0] + (change_x * (dist+1))]
+        space = grid[head_pos[0] + (change_y * (dist+1))][head_pos[1] + (change_x * (dist+1))]
         dist += 1
         if space == 9:
             has_apple = True
@@ -41,14 +41,14 @@ class Agent:
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 
-        if os.path.isfile(file_name):
-            self.memory = shelve.open(file_name, writeback=True)
-        else:
+            print('not found')
             self.memory = shelve.open(file_name, writeback=True)
             self.memory['mem'] = deque(maxlen=MAX)
 
+        self.memory = shelve.open(file_name, writeback=True)
+
     def get_state(self, grid, snek, apple):
-        head_pos = list(snek)[0][1], list(snek)[0][0]
+        head_pos = list(snek)[0]
         apple_pos = apple
 
         change = snek.get(list(snek)[0])
@@ -62,7 +62,16 @@ class Agent:
         elif change == (-1, 0):     # up
             direction_head = 0
 
-        direction_tail = snek.get(list(snek)[-1])
+        change_tail = snek.get(list(snek)[-1])
+
+        if change_tail == (0, 1):        # right
+            direction_tail = 90
+        elif change_tail == (1, 0):      # down
+            direction_tail = 180
+        elif change_tail == (0, -1):     # left
+            direction_tail = 270
+        elif change_tail == (-1, 0):     # up
+            direction_tail = 0
 
         dist_s = 0
         dist_r = 0
@@ -86,8 +95,8 @@ class Agent:
         tail_dir_d = False
 
         if list(snek)[0][0] not in (0, 19) and list(snek)[0][1] not in (0, 19):
-            dist_food_x = abs(head_pos[0] - apple_pos[0])
-            dist_food_y = abs(head_pos[1] - apple_pos[1])
+            dist_food_x = abs(head_pos[1] - apple_pos[1])
+            dist_food_y = abs(head_pos[0] - apple_pos[0])
 
             if direction_head == 0:
                 dir_u = True
@@ -129,7 +138,7 @@ class Agent:
             if direction_tail == 270:
                 tail_dir_l = True
 
-        state = [dist_s, dist_r, dist_l, dist_food_x, dist_food_y, food_s, food_r, food_l,
+        state = [dist_s, dist_r, dist_l, dist_food_y, dist_food_x, food_s, food_r, food_l,
                  dir_l, dir_r, dir_u, dir_d, tail_dir_l, tail_dir_r, tail_dir_u, tail_dir_d]
 
         return np.array(state, dtype=int)
