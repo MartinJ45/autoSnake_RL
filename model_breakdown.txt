@@ -1,0 +1,84 @@
+Best Model: Model 01
+
+Model 01:
+- BOARD_SIZE=20x20
+- SHAPE=16-32-3
+- LOSS_FUNCTION=MSELoss()
+- OPTIMIZER=Adam()
+- LR=0.001
+- RANDOM=500
+- BATCH_SIZE=1000
+- GAMA=0.9
+After 1000 games:
+- High score of 18
+- Average score of 1.72
+After 2000 games:
+- High score of 53
+- Average score of 25.50
+After 3000 games:
+- High score of 57
+- Average score of 22.45
+
+Model 02: (changed LR to 0.0001)
+- BOARD_SIZE=20x20
+- SHAPE=16-32-3
+- LOSS_FUNCTION=MSELoss()
+- OPTIMIZER=Adam()
+- LR=0.0001
+- RANDOM=500
+- BATCH_SIZE=1000
+- GAMA=0.9
+After 1000 games:
+- High score of 5
+- Average score of 1.07
+After 2000 games:
+- High score of 7
+- Average score of 1.14
+After 3000 games:
+- High score of 10
+- Average score of 1.58
+
+Model 03: (changed LR to 0.01)
+- BOARD_SIZE=20x20
+- SHAPE=16-32-3
+- LOSS_FUNCTION=MSELoss()
+- OPTIMIZER=Adam()
+- LR=0.01
+- RANDOM=500
+- BATCH_SIZE=1000
+- GAMA=0.9
+After 1000 games:
+- High score of 4
+- Average score of 1.03
+After 2000 games:
+- High score of 4
+- Average score of 1.03
+
+Model 04: (changed RANDOM to 1000)
+- BOARD_SIZE=20x20
+- SHAPE=16-32-3
+- LOSS_FUNCTION=MSELoss()
+- OPTIMIZER=Adam()
+- LR=0.001
+- RANDOM=1000
+- BATCH_SIZE=1000
+- GAMA=0.9
+After 1000 games:
+- High score of 9
+- Average score of 1.80
+After 2000 games:
+- High score of 20
+- Average score of 1.66
+
+Model 05: (changed OPTIMIZER to SGD())
+- BOARD_SIZE=20x20
+- SHAPE=16-32-3
+- LOSS_FUNCTION=MSELoss()
+- OPTIMIZER=SGD()
+- LR=0.001
+- RANDOM=500
+- BATCH_SIZE=1000
+- GAMA=0.9
+After 1000 games:
+- High score of
+- Average score of
