@@ -1,24 +1,23 @@
 # Name: Martin Jimenez
-# Date: 04/24/2023 (last updated)
+# Date: 04/27/2023 (last updated)
 
 import numpy as np
-from agent_text import Agent
+from agent import Agent
 import shelve
 from random import *
 import time
-from helper import plot
+from helper import plot, display_game
 
 # The default game speed is 10; this value can be changed by pressing the
 # left and right arrow keys
 stepsPerSecond = 10
 step = 0
-delay = 0
 
 isPaused = True
 isPlaying = False
 reset = False
 autoReset = True
-autoSave = True
+autoSave = False
 add_body = False
 
 # Grabs size input
@@ -67,14 +66,14 @@ best_score = int(best_score)
 
 
 # Stops the program when the snake loses, wins, or if the game is ended early
-def gameOver():
+def game_over():
     if autoReset:
         #print("appleSeed =", apple.get_seed())
-        resetGame()
+        reset_game()
         return
 
 
-def resetGame():
+def reset_game():
     global appleSeed
     global snek
     global apple
@@ -301,7 +300,8 @@ def onKeyPress(key):
         gameOver()
 '''
 
-def play_step():
+
+def play_step(delay=0.0, train=True, plot_score=True, display=False):
     global snek
     global apple
     global path
@@ -321,6 +321,8 @@ def play_step():
     global score
     global add_body
 
+    time.sleep(delay)
+
     if reset:
         # resetGame()
         reset = False
@@ -336,6 +338,7 @@ def play_step():
 
     grid = gen_grid(snek, apple)
 
+    # print('grid:')
     # for g in grid:
     #     print(g)
     # print('\n')
@@ -343,7 +346,7 @@ def play_step():
     old_state = agent.get_state(grid, snek, apple)
 
     if not isPlaying:
-        action = agent.get_action(old_state, best_score)
+        action = agent.get_action(old_state)
 
     change = snek.get(list(snek)[0])
 
@@ -415,23 +418,31 @@ def play_step():
 
         if score > best_score:
             best_score = score
-        #else:
-            #agent.forget(step)
+        # if score < best_score - 10:
+        #     agent.forget(step)
 
         curr_score = score
+
+        grid = gen_grid(snek, apple)
 
         # trains short memory
         new_state = agent.get_state(grid, snek, apple)
 
-        agent.train_sm(old_state, action, reward, new_state, game_over=True)
+        if train:
+            agent.train_sm(old_state, action, reward, new_state, game_over=True)
 
-        # remember
-        agent.remember(old_state, action, reward, new_state, game_over=True)
+            # remember
+            agent.remember(old_state, action, reward, new_state, game_over=True)
+
+            # game.value += 1
+            agent.train_lm()
+        else:
+            agent.test_sm(old_state, action, reward, new_state, game_over=True)
+
+            agent.test_lm()
 
         # train the long memory
         agent.n_games += 1
-        # game.value += 1
-        agent.train_lm()
 
         print('Game', agent.n_games, 'Score', curr_score, 'Record', best_score)
 
@@ -439,33 +450,42 @@ def play_step():
         total_score += curr_score
         avg_score = total_score / (agent.n_games - initial_games)
         plot_avg_scores.append(avg_score)
-        plot(plot_scores, plot_avg_scores)
+        if plot_score:
+            plot(plot_scores, plot_avg_scores)
 
         # resets on autoReset
-        gameOver()
+        game_over()
     else:
+        grid = gen_grid(snek, apple)
+
         new_state = agent.get_state(grid, snek, apple)
 
-        agent.train_sm(old_state, action, reward, new_state, game_over=False)
+        if train:
+            agent.train_sm(old_state, action, reward, new_state, game_over=False)
 
-        # remember
-        agent.remember(old_state, action, reward, new_state, game_over=False)
+            # remember
+            agent.remember(old_state, action, reward, new_state, game_over=False)
+        else:
+            agent.test_sm(old_state, action, reward, new_state, game_over=False)
+
+    if display:
+        display_game(grid)
 
     step += 1
 
 
 if __name__ == '__main__':
-    games = 50
+    print(len(agent.memory['mem']))
+
+    games = 1000    # change to 500 for testing
 
     num_start = agent.n_games
 
-    print(len(agent.memory['mem']))
-
     timer_start = time.time()
-    while agent.n_games - num_start < games:
-        play_step()
 
-        time.sleep(delay)
+    while agent.n_games - num_start < games:
+        play_step(delay=0, train=True, plot_score=False, display=False)
+
     timer_end = time.time()
 
     total_time = timer_end - timer_start
