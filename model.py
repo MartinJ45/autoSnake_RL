@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
 import os
 
 
@@ -104,3 +103,43 @@ class QTrainer:
         # print('pred', pred)
         # print('target', target)
         # print('state', next_state)
+
+    def test_step(self, state, action, reward, next_state, game_over):
+        with torch.inference_mode():
+            state = torch.tensor(state, dtype=torch.float)
+            next_state = torch.tensor(next_state, dtype=torch.float)
+            action = torch.tensor(action, dtype=torch.float)
+            reward = torch.tensor(reward, dtype=torch.float)
+            # (n, x)
+
+            if len(state.shape) == 1:
+                # (1, x)
+                state = torch.unsqueeze(state, 0)
+                next_state = torch.unsqueeze(next_state, 0)
+                action = torch.unsqueeze(action, 0)
+                reward = torch.unsqueeze(reward, 0)
+                game_over = (game_over,)  # defines it as a tuple
+
+            # 1: predicted Q values with current state
+            pred = self.model(state)  # decides where the snake should go
+
+            target = pred.clone()
+
+            for i in range(len(game_over)):
+                Q_new = reward[i]
+
+                if not game_over[i]:
+                    Q_new = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
+
+                target[i][torch.argmax(action).item()] = Q_new
+
+            # 2: Q_new = r + y * max(next_Q) -> only if not done
+            # pred.clone()
+            # preds[argmax(action)] = Q_new
+
+            loss = self.criterion(target, pred)
+
+            # print('loss', loss)
+            # print('pred', pred)
+            # print('target', target)
+            # print('state', next_state)
