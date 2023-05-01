@@ -62,6 +62,8 @@ class QTrainer:
         self.criterion = nn.MSELoss()
 
     def train_step(self, state, action, reward, next_state, game_over):
+        self.model.train()
+
         state = torch.tensor(state, dtype=torch.float)
         next_state = torch.tensor(next_state, dtype=torch.float)
         action = torch.tensor(action, dtype=torch.float)
@@ -105,6 +107,8 @@ class QTrainer:
         # print('state', next_state)
 
     def test_step(self, state, action, reward, next_state, game_over):
+        self.model.eval()
+
         with torch.inference_mode():
             state = torch.tensor(state, dtype=torch.float)
             next_state = torch.tensor(next_state, dtype=torch.float)
