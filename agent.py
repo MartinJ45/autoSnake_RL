@@ -31,7 +31,6 @@ class Agent:
         self.n_games = n_games
         self.epsilon = 0  # controls randomness
         self.gamma = 0.9  # discount rate (smaller than 1)
-        #self.memory = deque(maxlen=MAX)
         self.model = Linear_QNet(16, 32, 3)  # (number of inputs, hidden size, number of outputs)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
@@ -45,6 +44,7 @@ class Agent:
             print('not found')
             self.memory = shelve.open(file_name, writeback=True)
             self.memory['mem'] = deque(maxlen=MAX)
+            # self.memory['hash'] = deque(maxlen=MAX)
 
         self.memory = shelve.open(file_name, writeback=True)
 
@@ -139,13 +139,26 @@ class Agent:
             if direction_tail == 270:
                 tail_dir_l = True
 
-        state = [dist_s, dist_r, dist_l, dist_food_y, dist_food_x, food_s, food_r, food_l,
-                 dir_l, dir_r, dir_u, dir_d, tail_dir_l, tail_dir_r, tail_dir_u, tail_dir_d]
+        state = [dist_s, dist_r, dist_l,
+                 dist_food_y, dist_food_x,
+                 food_s, food_r, food_l,
+                 dir_l, dir_r, dir_u, dir_d,
+                 tail_dir_l, tail_dir_r, tail_dir_u, tail_dir_d]
 
         return np.array(state, dtype=int)
 
     def remember(self, state, action, reward, next_state, game_over):
         self.memory['mem'].append((state, action, reward, next_state, game_over))
+
+        # tuple_state = tuple(state)
+        # tuple_action = tuple(action)
+        # tuple_next_state = tuple(next_state)
+        #
+        # hash_mem = hash((tuple_state, tuple_action, reward, tuple_next_state, game_over))
+        #
+        # if hash_mem not in self.memory['hash']:
+        #     self.memory['mem'].append((state, action, reward, next_state, game_over))
+        #     self.memory['hash'].append(hash_mem)
 
     def forget(self, steps):
         for i in range(steps):
