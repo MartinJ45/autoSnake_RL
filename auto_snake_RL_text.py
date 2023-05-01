@@ -1,34 +1,31 @@
 # Name: Martin Jimenez
-# Date: 04/27/2023 (last updated)
+# Date: 05/01/2023 (last updated)
 
-import numpy as np
-from agent import Agent
-import shelve
 from random import *
+import numpy as np
+import shelve
 import time
+
+from agent import Agent
 from helper import plot, display_game
 
-# The default game speed is 10; this value can be changed by pressing the
-# left and right arrow keys
+# The default game speed is 10
 stepsPerSecond = 10
 step = 0
 
-isPaused = True
-isPlaying = False
-reset = False
-autoReset = True
-autoSave = False
-add_body = False
+# Default boolean values
+isPaused = False    # not in use
+isPlaying = False   # not in use
+reset = False       # tells the program to reset the game when it ends
+autoReset = True    # automatically resets the game when it ends
+autoSave = False    # automatically saves the model every 100 games
+add_body = False    # tells the program to add a snake piece when the snake eats an apple
 
-# Grabs size input
-# breaks on 4
-
-size = 18
+size = 18           # the size of the playable board (18x18) (with the border: 20x20)
 
 # This is the grid that the snake uses
 # 0 represents open space
 # 1 represents the border or the snake body
-# 2 represents the path the snake plans to take towards the apple
 # 3 represents the snake head
 # 5 is a goal representing the end of the tail (used when it cannot locate the apple)
 # 9 is a goal representing the apple
@@ -40,19 +37,28 @@ for i in range(size):
     grid.append([1] + [0] * size + [1])
 grid.append([1] * (size + 2))
 
-# Draws the border and score
-path = []
-
+# snake dictionary {(positionY, positionX): (direction)}
+# (0, 1) -> moving right
+# (0, -1) -> moving left
+# (1, 0) -> moving down
+# (-1, 0) -> moving up
 snek = {(9, 8): (0, 1)}
 
+# action the snake is taking
+# [1, 0, 0] -> straight
+# [0, 1, 0] -> turn right
+# [0, 0, 1] -> turn left
+action = [1, 0, 0]
+
+# apple position
 apple = (9, 9)
 
+#
 appleSeed = []
-
-action = [1, 0, 0]
 
 reward = 0
 
+# used when plotting
 plot_scores = []
 plot_avg_scores = []
 total_score = 0
@@ -68,20 +74,17 @@ best_score = int(best_score)
 # Stops the program when the snake loses, wins, or if the game is ended early
 def game_over():
     if autoReset:
-        #print("appleSeed =", apple.get_seed())
         reset_game()
         return
 
 
+# resets variables for a new game
 def reset_game():
     global appleSeed
     global snek
     global apple
     global step
     global score
-
-    #print('RESET')
-    #print('Snake got', score.value)
 
     appleSeed = []
     snek = {(9, 8): (0, 1)}
@@ -111,6 +114,7 @@ def gen_grid(snek, apple):
     return grid
 
 
+# moves the snake across the board
 def move_snake(snek, add_body):
     if add_body:
         last_pos = list(snek)[-1]
@@ -140,7 +144,10 @@ def move_snake(snek, add_body):
     return snek, False, False
 
 
+# generates a new apple when one is eaten
 def gen_apple(snek):
+    global isPaused
+
     x = randint(1, size)
     y = randint(1, size)
 
@@ -148,11 +155,12 @@ def gen_apple(snek):
 
     for pos in list(snek):
         if pos == apple:
-            gen_apple(snek)
+            apple = gen_apple(snek)
 
     return apple
 
 
+# saves the model
 def save():
     global agent
 
@@ -304,7 +312,6 @@ def onKeyPress(key):
 def play_step(delay=0.0, train=True, plot_score=True, display=False):
     global snek
     global apple
-    global path
     global isPlaying
     global isPaused
     global grid
@@ -324,12 +331,11 @@ def play_step(delay=0.0, train=True, plot_score=True, display=False):
     time.sleep(delay)
 
     if reset:
-        # resetGame()
         reset = False
         return
 
-    # if isPaused:
-    #     return
+    if isPaused:
+        return
 
     if step > 50 * len(snek):
         reward = -5
@@ -382,16 +388,6 @@ def play_step(delay=0.0, train=True, plot_score=True, display=False):
     if list(snek)[0] == apple:
         reward = 20             # reward for eating apple
 
-        if score % 10 == 0:
-            reward = 25
-
-        if score - 1 == best_score:
-            reward = 30
-        if score - 5 == best_score:
-            reward = 40
-        if score - 10 == best_score:
-            reward = 60
-
         # Adds another body segment
         add_body = True
 
@@ -411,7 +407,7 @@ def play_step(delay=0.0, train=True, plot_score=True, display=False):
         score += 1
 
     if is_dead or list(snek)[0][0] in (0, 19) or list(snek)[0][1] in (0, 19) or step > 100 * len(snek):
-        reward = -15 * 0.2 * len(snek)
+        reward = -20
 
         if autoSave and agent.n_games % 100 == 0:
             save()
@@ -477,7 +473,9 @@ def play_step(delay=0.0, train=True, plot_score=True, display=False):
 if __name__ == '__main__':
     print(len(agent.memory['mem']))
 
-    games = 1000    # change to 500 for testing
+    # print(agent.memory['mem'])
+
+    games = 1000
 
     num_start = agent.n_games
 
