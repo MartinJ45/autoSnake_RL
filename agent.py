@@ -30,7 +30,7 @@ class Agent:
     def __init__(self, n_games=0):
         self.n_games = n_games
         self.epsilon = 0  # controls randomness
-        self.gamma = 0.9  # discount rate (smaller than 1)
+        self.gamma = 0.8  # discount rate (smaller than 1)
         self.model = Linear_QNet(16, 32, 3)  # (number of inputs, hidden size, number of outputs)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
