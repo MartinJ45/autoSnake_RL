@@ -1,0 +1,128 @@
+# Name: Martin Jimenez
+# Date: 05/19/2023 (last updated)
+# Description:
+"""
+A final exercise...
+Cellular Automata is a fun theoretical exercise in computer science. Automata involves a lot of core concepts that you
+will no doubt cover in some of your senior level classes in school such as Turing Machines, or even the eternal struggle
+to pin down discrete and simple proofs onto seemingly continuous patterns in nature. Without spending too much time
+trying to unravel the mathematical secrets of the universe, we can at the very least revel in the romanticism that is a
+beautifully complex pattern. 
+
+Lets take a trip back in time to the year 1970 and have a look at Conway's Game of Life, a fitting final exercise on the
+last day of your Coop here at Longwood. Conway's Game of Life is a zero player game that has three simple rules. It
+features a simple m x n grid with 1s and 0s assigned to random cells, with 1s or black colored cells representing living
+organisms, and 0s or white cells are dead cells or empty space.
+
+Rule #1: if the cell is alive and has less than 2 living neighboring cells in a 3x3 grid, the cell dies due to
+underpopulation
+Rule #2: if the cell is alive and has more than 3 living neighboring cells in a 3x3 grid, the cell dies due to
+overpopulation
+Rule #3: if the cell is dead and has exactly 3 neighbors, a cell is born due to reproduction
+
+Each step of the game represents a moment in time and as time begins to pass, the game board changes from a chaotic
+evenly distributed mess of nascent cells, to interesting and complex structures that mimic bacteria cultivating in a
+Petrie dish, or even our universe after a big bang. This can be extremely useful for simulating ecosystems in biology,
+studying entropy in chemistry, or modeling the visible universe as we know it in an effort to try and make sense of it
+all.
+
+As it pertains to theoretical computer science, the hottest topic that arises from this thought experiment is simplicity
+vs complexity. This is often expressed as the term "Emergent Behavior". It attempts to answer questions like why do bees
+dance in complex patterns when sharing information within the colony? or how did ants evolve to have complex roles such
+as guards in their hive to protect the greater good? How does complex order in life come out of random and inexplicable
+chaos? These are questions that we may never learn the answers to, but for now we can always simulate and use good old
+inductive reasoning.
+
+If you find these kinds of questions fascinating, there is a $30,000 prize out there from Wolfram Math for answering
+these questions relating to Wolfram's Elementary Cellular Automata- a one dimensional version of Conway's game of life.
+
+There are also neural patterns, a whole separate topic, but there is this cool website that allows you to play with
+activation functions and observe the results.
+
+If you have any questions feel free to ask! I am trying to simulate a herbivore/omnivore/predator ecosystem using
+automata if you would like to check that out as well. I always enjoy bouncing ideas off of you.
+
+I hope your time here at Longwood has been enriching and created a space for you to find and explore your passions. If
+you would ever like to reach out to me, you can email me at caseyzduniak@gmail.com or text me at 484-784-7958. Never
+stop learning.
+
+-Casey
+"""
+
+import numpy as np
+from helper import display_game
+import time
+import matplotlib.colors as mcolors
+
+from typing import Tuple
+
+
+def create_grid(size: Tuple[int, int]):
+    state = np.random.choice(a=[0, 1],
+                             size=size)
+
+    return state
+
+
+def update_grid(state: np.array):
+    new_state = np.array(state)
+
+    for y in range(len(state)):
+        for x in range(len(state[y])):
+            neighbors = 0
+
+            for y_change in [-1, 0, 1]:
+                for x_change in [-1, 0, 1]:
+                    if (y_change, x_change) == (0, 0):
+                        continue
+
+                    if y == 0 and y_change == -1:
+                        continue
+
+                    if x == 0 and x_change == -1:
+                        continue
+
+                    try:
+                        if state[y + y_change][x + x_change] == 1:
+                            neighbors += 1
+                    except:
+                        continue
+
+            # print(f'state[{y}][{x}]({state[y][x]}) has {neighbors} neighbors')
+            # Rule 1
+            if state[y][x] == 1 and neighbors < 2:
+                new_state[y][x] = 0
+
+            # Rule 2
+            if state[y][x] == 1 and neighbors > 3:
+                new_state[y][x] = 0
+
+            # Rule 3
+            if state[y][x] == 0 and neighbors == 3:
+                new_state[y][x] = 1
+
+    print(state)
+    print(new_state)
+
+    return new_state
+
+
+def play_step(delay: float,
+              state: np.array):
+    cmap = mcolors.ListedColormap(['white', 'black'])
+    display_game(state=state,
+                 cmap=cmap)
+
+    state = update_grid(state=state)
+
+    time.sleep(delay)
+
+    return state
+
+
+if __name__ == '__main__':
+    dish = create_grid(size=(100, 100))
+
+    while True:
+        dish = play_step(delay=0,
+                         state=dish)
